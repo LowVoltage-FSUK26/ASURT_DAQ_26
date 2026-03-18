@@ -257,6 +257,7 @@ typedef enum
 	DAQ_CAN_ID_PROX_ENCODER,
 	DAQ_CAN_ID_GPS,
 	DAQ_CAN_ID_TEMP,
+	DAQ_CAN_ID_STEERING_ENC,
 } daq_can_id_t;
 /**
  * @brief Message Info to be enqueued in the CAN queue.
