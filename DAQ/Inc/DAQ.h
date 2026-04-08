@@ -157,6 +157,19 @@ typedef struct {
 	uint8_t error_count; /*!< Counts the number of errors the task has caused. */
 	uint8_t task_demoted; /*!< Set to 1 if the task was kicked from the system (ie the error count reached `DAQ_MAX_ERROR_COUNT`). */
 } task_stats_t;
+
+/* added 8/4/2026 struct to correctly offset the SP address */
+typedef struct {
+    uint32_t r0;
+    uint32_t r1;
+    uint32_t r2;
+    uint32_t r3;
+    uint32_t r12;
+    uint32_t lr;
+    uint32_t pc;
+    uint32_t xpsr;
+} stack_registers;
+/* end */
 /**
  * @brief A struct for each task's stats needed for fault detection and logging.
  *
@@ -172,7 +185,7 @@ typedef struct {
     uint8_t reset_reason; /*!< One of the reset reasons in `daq_reset_reason_t`. */
     uint8_t fault_status; /*!< Stores the fault status from the register `SCB->CFSR`. */
     uint32_t fault_address; /*!< Stores the fault address from the fault address registers in `SCB`. */
-    //uint32_t stack_frame[8]; /*!< Suggested future improvement */
+    uint32_t stack_frame[8];  /*!< Suggested future improvement */
     daq_fault_record_t task_records; /*!< Stores all tasks' fault record */
     daq_timestamp_t timestamp; /*!< Stores the global timestamp of the DAQ system. */
 } fault_log_t;
@@ -219,6 +232,10 @@ void DAQ_WWDG_Task(void *pvParameters);
  * @brief Logs the fault info and stalls the system until a WWDG reset occurs.
  *
  */
+/* added 8/4/2026 the new Hardfault handler function which includes the SP */
+void DAQ_HardFault_Handler(stack_registers *frame);
+/* end */
+
 void DAQ_Task_Fault_Handler(void);
 /**
  * @brief When a fault occurs, this task is created as a warning.

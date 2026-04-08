@@ -93,7 +93,17 @@ void NMI_Handler(void)
 /**
   * @brief This function handles Hard fault interrupt.
   */
-void HardFault_Handler(void)
+__attribute__((naked)) void HardFault_Handler(void)
+{
+    __asm volatile(
+        "TST   LR, #4          \n"
+        "ITE   EQ              \n"
+        "MRSEQ R0, MSP         \n"
+        "MRSNE R0, PSP         \n"
+        "B     DAQ_HardFault_Handler \n"
+    );
+}
+void DAQ_HardFault_Handler(stack_registers *frame)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
 	HAL_WWDG_Refresh(&hwwdg);
@@ -103,14 +113,45 @@ void HardFault_Handler(void)
 	log.fault_status = SCB->HFSR;
 	log.task_records = g_daq_fault_record;
 	log.timestamp = g_timestamp;
+	log.stack_frame[0] = frame->r0;
+	log.stack_frame[1] = frame->r1;
+	log.stack_frame[2] = frame->r2;
+	log.stack_frame[3] = frame->r3;
+	log.stack_frame[4] = frame->r12;
+	log.stack_frame[5] = frame->lr;
+	log.stack_frame[6] = frame->pc;
+	log.stack_frame[7] = frame->xpsr;
 	DAQ_FaultLog_Write(&log);
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
-    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
-    /* USER CODE END W1_HardFault_IRQn 0 */
+	/* USER CODE BEGIN W1_HardFault_IRQn 0 */
+	/* USER CODE END W1_HardFault_IRQn 0 */
   }
 }
+
+/*
+void HardFault_Handler(void)
+{
+
+	 HAL_WWDG_Refresh(&hwwdg);
+	__disable_irq();
+	fault_log_t log = {0};
+	log.reset_reason = DAQ_RESET_REASON_HARDFAULT;
+	log.fault_status = SCB->HFSR;
+	log.task_records = g_daq_fault_record;
+	log.timestamp = g_timestamp;
+	DAQ_FaultLog_Write(&log);
+
+
+  while (1)
+  {
+
+  }
+}
+*/
+
+
 
 /**
   * @brief This function handles Memory management fault.
