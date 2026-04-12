@@ -228,7 +228,7 @@ void DAQ_CAN_Task(void *pvParameters)
 		encoder_msg_fault.time_seconds = (uint32_t) g_fault_log_buffer.current.timestamp.seconds;
 		for(int i = 0; i < DAQ_NO_OF_READ_TASKS; i++) {
 			if(g_fault_log_buffer.current.task_records.tasks[i].error_count != g_fault_log_buffer.prev.task_records.tasks[i].error_count) {
-				encoder_msg_fault.task_handle = i;
+				encoder_msg_fault.task_handle = (uint32_t) i;
 				encoder_msg_fault.task_error_count = (uint32_t) g_fault_log_buffer.current.task_records.tasks[i].error_count;
 			}
 		}
