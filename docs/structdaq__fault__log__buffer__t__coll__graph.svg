@@ -42,7 +42,7 @@
 <title>Node3</title>
 <g id="a_Node000003"><a xlink:href="structdaq__fault__record__t.html" target="_top" xlink:title="A struct for each task&#39;s stats needed for fault detection and logging.">
 <polygon fill="white" stroke="#666666" points="96.25,-184 0,-184 0,-164 96.25,-164 96.25,-184"/>
-<text xml:space="preserve" text-anchor="middle" x="48.12" y="-170.5" font-family="Helvetica,sans-Serif" font-size="10.00">daq_fault_record_t</text>
+<text xml:space="preserve" text-anchor="middle" x="48.12" y="-170.5" font-family="Helvetica,sans-Serif" font-size="10.00">fault_record_t</text>
 </a>
 </g>
 </g>

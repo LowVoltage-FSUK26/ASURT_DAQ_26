@@ -6,7 +6,7 @@
  */
 #include "Position.h"
 
-extern daq_fault_record_t g_daq_fault_record;                  // Global DAQ fault record for diagnostics
+extern fault_record_t g_daq_fault_record;                  // Global DAQ fault record for diagnostics
 volatile uint16_t adc_raw_values[DAQ_NO_OF_ADC_SENSORS] = {0}; // Latest raw ADC readings
 
 adc_median_filter_t adc_filters[DAQ_NO_OF_ADC_SENSORS];        // Median filters for all ADC sensors

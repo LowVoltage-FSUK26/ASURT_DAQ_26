@@ -9,7 +9,7 @@ var annotated_dup =
     [ "daq_can_msg_t", "structdaq__can__msg__t.html", "structdaq__can__msg__t" ],
     [ "daq_can_msg_temp_t", "structdaq__can__msg__temp__t.html", null ],
     [ "daq_fault_log_buffer_t", "structdaq__fault__log__buffer__t.html", "structdaq__fault__log__buffer__t" ],
-    [ "daq_fault_record_t", "structdaq__fault__record__t.html", null ],
+    [ "fault_record_t", "structdaq__fault__record__t.html", null ],
     [ "daq_status_words_t", "structdaq__status__words__t.html", null ],
     [ "daq_timestamp_t", "structdaq__timestamp__t.html", null ],
     [ "fault_log_t", "structfault__log__t.html", "structfault__log__t" ],

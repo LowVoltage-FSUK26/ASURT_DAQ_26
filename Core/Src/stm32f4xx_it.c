@@ -46,7 +46,7 @@
 /* USER CODE BEGIN PV */
 extern I2C_HandleTypeDef hi2c1;
 extern daq_timestamp_t g_timestamp;
-extern daq_fault_record_t g_daq_fault_record;
+extern fault_record_t g_daq_fault_record;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -103,7 +103,7 @@ __attribute__((naked)) void HardFault_Handler(void)
         "B     DAQ_HardFault_Handler \n"
     );
 }
-void DAQ_HardFault_Handler(stack_registers *frame)
+void DAQ_HardFault_Handler(stack_registers_t *frame)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
 	HAL_WWDG_Refresh(&hwwdg);
@@ -130,33 +130,22 @@ void DAQ_HardFault_Handler(stack_registers *frame)
   }
 }
 
-/*
-void HardFault_Handler(void)
-{
-
-	 HAL_WWDG_Refresh(&hwwdg);
-	__disable_irq();
-	fault_log_t log = {0};
-	log.reset_reason = DAQ_RESET_REASON_HARDFAULT;
-	log.fault_status = SCB->HFSR;
-	log.task_records = g_daq_fault_record;
-	log.timestamp = g_timestamp;
-	DAQ_FaultLog_Write(&log);
-
-
-  while (1)
-  {
-
-  }
-}
-*/
-
 
 
 /**
   * @brief This function handles Memory management fault.
   */
-void MemManage_Handler(void)
+__attribute__((naked)) void MemManage_Handler(void)
+{
+    __asm volatile(
+        "TST   LR, #4          \n"
+        "ITE   EQ              \n"
+        "MRSEQ R0, MSP         \n"
+        "MRSNE R0, PSP         \n"
+        "B     DAQ_MemManage_Handler \n"
+    );
+}
+void DAQ_MemManage_Handler(stack_registers_t *frame)
 {
   /* USER CODE BEGIN MemoryManagement_IRQn 0 */
 	HAL_WWDG_Refresh(&hwwdg);
@@ -167,6 +156,14 @@ void MemManage_Handler(void)
 	log.fault_address = SCB->MMFAR;
 	log.task_records = g_daq_fault_record;
 	log.timestamp = g_timestamp;
+	log.stack_frame[0] = frame->r0;
+	log.stack_frame[1] = frame->r1;
+	log.stack_frame[2] = frame->r2;
+	log.stack_frame[3] = frame->r3;
+	log.stack_frame[4] = frame->r12;
+	log.stack_frame[5] = frame->lr;
+	log.stack_frame[6] = frame->pc;
+	log.stack_frame[7] = frame->xpsr;
 	DAQ_FaultLog_Write(&log);
   /* USER CODE END MemoryManagement_IRQn 0 */
   while (1)
@@ -179,7 +176,17 @@ void MemManage_Handler(void)
 /**
   * @brief This function handles Pre-fetch fault, memory access fault.
   */
-void BusFault_Handler(void)
+__attribute__((naked)) void BusFault_Handler(void)
+{
+    __asm volatile(
+        "TST   LR, #4          \n"
+        "ITE   EQ              \n"
+        "MRSEQ R0, MSP         \n"
+        "MRSNE R0, PSP         \n"
+        "B     DAQ_BusFault_Handler \n"
+    );
+}
+void DAQ_BusFault_Handler(stack_registers_t *frame)
 {
   /* USER CODE BEGIN BusFault_IRQn 0 */
 	HAL_WWDG_Refresh(&hwwdg);
@@ -190,6 +197,14 @@ void BusFault_Handler(void)
 	log.fault_address = SCB->BFAR;
 	log.task_records = g_daq_fault_record;
 	log.timestamp = g_timestamp;
+	log.stack_frame[0] = frame->r0;
+	log.stack_frame[1] = frame->r1;
+	log.stack_frame[2] = frame->r2;
+	log.stack_frame[3] = frame->r3;
+	log.stack_frame[4] = frame->r12;
+	log.stack_frame[5] = frame->lr;
+	log.stack_frame[6] = frame->pc;
+	log.stack_frame[7] = frame->xpsr;
 	DAQ_FaultLog_Write(&log);
   /* USER CODE END BusFault_IRQn 0 */
   while (1)
@@ -202,7 +217,17 @@ void BusFault_Handler(void)
 /**
   * @brief This function handles Undefined instruction or illegal state.
   */
-void UsageFault_Handler(void)
+__attribute__((naked)) void UsageFault_Handler(void)
+{
+    __asm volatile(
+        "TST   LR, #4          \n"
+        "ITE   EQ              \n"
+        "MRSEQ R0, MSP         \n"
+        "MRSNE R0, PSP         \n"
+        "B     DAQ_UsageFault_Handler \n"
+    );
+}
+void DAQ_UsageFault_Handler(stack_registers_t *frame)
 {
   /* USER CODE BEGIN UsageFault_IRQn 0 */
 	HAL_WWDG_Refresh(&hwwdg);
@@ -212,6 +237,14 @@ void UsageFault_Handler(void)
 	log.fault_status = SCB->CFSR & 0xFFFF0000;
 	log.task_records = g_daq_fault_record;
 	log.timestamp = g_timestamp;
+	log.stack_frame[0] = frame->r0;
+	log.stack_frame[1] = frame->r1;
+	log.stack_frame[2] = frame->r2;
+	log.stack_frame[3] = frame->r3;
+	log.stack_frame[4] = frame->r12;
+	log.stack_frame[5] = frame->lr;
+	log.stack_frame[6] = frame->pc;
+	log.stack_frame[7] = frame->xpsr;
 	DAQ_FaultLog_Write(&log);
   /* USER CODE END UsageFault_IRQn 0 */
   while (1)

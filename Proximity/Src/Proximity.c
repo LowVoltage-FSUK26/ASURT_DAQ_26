@@ -20,7 +20,7 @@ static DMA_HandleTypeDef prox_dma_handles[PROX_NO_OF_WHEELS];
 static uint32_t timer_counters[PROX_NO_OF_WHEELS] = {&TIM1->CCR1, &TIM1->CCR2, &TIM1->CCR3, &TIM1->CCR4};
 
 // Shared DAQ fault record structure
-extern daq_fault_record_t g_daq_fault_record;
+extern fault_record_t g_daq_fault_record;
 
 static inline float Prox_GetTimerFreq(void)
 {

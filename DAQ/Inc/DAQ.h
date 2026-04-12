@@ -168,7 +168,7 @@ typedef struct {
     uint32_t lr;
     uint32_t pc;
     uint32_t xpsr;
-} stack_registers;
+} stack_registers_t;
 /* end */
 /**
  * @brief A struct for each task's stats needed for fault detection and logging.
@@ -176,7 +176,7 @@ typedef struct {
  */
 typedef struct{
 	task_stats_t tasks[DAQ_NO_OF_READ_TASKS];
-}daq_fault_record_t;
+}fault_record_t;
 /**
  * @brief Contains all fault info to be logged to or read from the backup SRAM.
  *
@@ -185,8 +185,8 @@ typedef struct {
     uint8_t reset_reason; /*!< One of the reset reasons in `daq_reset_reason_t`. */
     uint8_t fault_status; /*!< Stores the fault status from the register `SCB->CFSR`. */
     uint32_t fault_address; /*!< Stores the fault address from the fault address registers in `SCB`. */
-    uint32_t stack_frame[8];  /*!< Suggested future improvement */
-    daq_fault_record_t task_records; /*!< Stores all tasks' fault record */
+    uint32_t stack_frame[8];  /*!< Stores the 8 registers pushed by ARM in the stack from `stack_registers_t`. */
+    fault_record_t task_records; /*!< Stores all tasks' fault record */
     daq_timestamp_t timestamp; /*!< Stores the global timestamp of the DAQ system. */
 } fault_log_t;
 /**
@@ -232,8 +232,14 @@ void DAQ_WWDG_Task(void *pvParameters);
  * @brief Logs the fault info and stalls the system until a WWDG reset occurs.
  *
  */
-/* added 8/4/2026 the new Hardfault handler function which includes the SP */
-void DAQ_HardFault_Handler(stack_registers *frame);
+/* added 8/4/2026 the new fault handlers function which includes the SP */
+void DAQ_HardFault_Handler(stack_registers_t *frame);
+
+void DAQ_BusFault_Handler(stack_registers_t *frame);
+
+void DAQ_MemManage_Handler(stack_registers_t *frame);
+
+void DAQ_UsageFault_Handler(stack_registers_t *frame);
 /* end */
 
 void DAQ_Task_Fault_Handler(void);
@@ -274,6 +280,7 @@ typedef enum
 	DAQ_CAN_ID_PROX_ENCODER,
 	DAQ_CAN_ID_GPS,
 	DAQ_CAN_ID_TEMP,
+	DAQ_CAN_ID_FAULT,
 	DAQ_CAN_ID_STEERING_ENC,
 } daq_can_id_t;
 /**
@@ -292,6 +299,21 @@ typedef struct{
  * Linear accelerations and Euler angles are encoded separately as different `daq_can_msg_imu_t` objects.
  *
  */
+/*
+ CAN msg struct to encode the fault log readings
+ */
+typedef struct{
+	uint32_t reset_reason : 4;
+	uint32_t time_seconds : 6;
+	uint32_t time_minutes : 6;
+	uint32_t time_hours   : 2;
+	uint32_t task_handle  : 4;
+	uint32_t task_error_count : 4;
+	uint32_t _padding : 6;
+	uint32_t PC;
+} daq_can_msg_fault_t;
+static_assert(sizeof(daq_can_msg_fault_t) == 8, "fault log CAN Message must be 8 bytes");
+
 typedef struct
 {
     int16_t x; /*!< x-component of either linear acceleration or Euler angle. */

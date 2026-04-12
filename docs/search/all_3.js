@@ -20,7 +20,7 @@ var searchData=
   ['daq_5fcheckchange_17',['DAQ_CheckChange',['../group___c_a_n___module.html#gacdad54e43941e464cde6b82f0a794579',1,'DAQ.h']]],
   ['daq_5ffault_5fblink_18',['DAQ_Fault_Blink',['../group___fault___module.html#ga5af76f0d3237de013b03c3c05ab11ce6',1,'DAQ_Fault_Blink(void *pvParameters):&#160;DAQ.c'],['../group___fault___module.html#ga5af76f0d3237de013b03c3c05ab11ce6',1,'DAQ_Fault_Blink(void *pvParameters):&#160;DAQ.c']]],
   ['daq_5ffault_5flog_5fbuffer_5ft_19',['daq_fault_log_buffer_t',['../structdaq__fault__log__buffer__t.html',1,'']]],
-  ['daq_5ffault_5frecord_5ft_20',['daq_fault_record_t',['../structdaq__fault__record__t.html',1,'']]],
+  ['daq_5ffault_5frecord_5ft_20',['fault_record_t',['../structdaq__fault__record__t.html',1,'']]],
   ['daq_5ffaultlog_5finit_21',['DAQ_FaultLog_Init',['../group___fault___module.html#ga4ba22cd346be6422e7b81dcd19a8623b',1,'DAQ_FaultLog_Init(void):&#160;DAQ.c'],['../group___fault___module.html#ga4ba22cd346be6422e7b81dcd19a8623b',1,'DAQ_FaultLog_Init(void):&#160;DAQ.c']]],
   ['daq_5ffaultlog_5fread_22',['DAQ_FaultLog_Read',['../group___fault___module.html#ga5fbfc3d180b59e093406c100904c0835',1,'DAQ_FaultLog_Read(daq_fault_log_buffer_t *log):&#160;DAQ.c'],['../group___fault___module.html#ga5fbfc3d180b59e093406c100904c0835',1,'DAQ_FaultLog_Read(daq_fault_log_buffer_t *log):&#160;DAQ.c']]],
   ['daq_5ffaultlog_5fwrite_23',['DAQ_FaultLog_Write',['../group___fault___module.html#gae4d3ba8cd33d9e1f854ae35c009fbb4c',1,'DAQ_FaultLog_Write(fault_log_t *log):&#160;DAQ.c'],['../group___fault___module.html#gae4d3ba8cd33d9e1f854ae35c009fbb4c',1,'DAQ_FaultLog_Write(fault_log_t *log):&#160;DAQ.c']]],

@@ -7,7 +7,7 @@
 #include "GPS.h"
 
 extern SemaphoreHandle_t g_i2c_mutex;                 // Global I2C mutex for thread-safe access across tasks
-extern daq_fault_record_t g_daq_fault_record;         // Global fault record structure for DAQ system
+extern fault_record_t g_daq_fault_record;         // Global fault record structure for DAQ system
 extern daq_i2c_dma_device_t g_i2c_dma_device;         // Global I2C-DMA device configuration/instance
 extern bool g_i2c_dma_flags[DAQ_NO_OF_I2C_DMA_DEVICES]; // Flags array indicating I2C-DMA device status
 

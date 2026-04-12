@@ -66,7 +66,7 @@ CAN_TxHeaderTypeDef can_tx_header;
 
 bool g_i2c_dma_flags[DAQ_NO_OF_I2C_DMA_DEVICES];
 daq_i2c_dma_device_t g_i2c_dma_device = I2C_DMA_NO_DEVICE;
-extern daq_fault_record_t g_daq_fault_record;
+extern fault_record_t g_daq_fault_record;
 extern DMA_HandleTypeDef hdma_tim1_ch1, hdma_tim1_ch2, hdma_tim1_ch3, hdma_tim1_ch4_trig_com;
 DMA_HandleTypeDef *proximity_dma_handlers[4] = {&hdma_tim1_ch1, &hdma_tim1_ch2, &hdma_tim1_ch3, &hdma_tim1_ch4_trig_com};
 

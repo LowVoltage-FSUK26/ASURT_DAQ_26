@@ -10,7 +10,7 @@ var group___fault___module =
       [ "start_tick", "structtask__stats__t.html#a501ce28957de2f61f6edbee9c9365444", null ],
       [ "task_demoted", "structtask__stats__t.html#a8350f383d5bb4fc3bfbc85c468dffa7d", null ]
     ] ],
-    [ "daq_fault_record_t", "structdaq__fault__record__t.html", null ],
+    [ "fault_record_t", "structdaq__fault__record__t.html", null ],
     [ "fault_log_t", "structfault__log__t.html", [
       [ "fault_address", "structfault__log__t.html#a7152f53d70ddbefa1cbf770fae34804f", null ],
       [ "fault_status", "structfault__log__t.html#a9e453cf0494ab9b37976263559caeae0", null ],

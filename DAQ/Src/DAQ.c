@@ -9,6 +9,7 @@
 #include "stm32f4xx.h"
 #include "wwdg.h"
 #include "DAQ.h"
+#include "DAQ_Config.h"
 #include "DAQ_BKPSRAM_Private.h"
 
 /* =========================================== PRIVATE VARIABLES =========================================== */
@@ -17,8 +18,9 @@ CAN_HandleTypeDef daq_can_handle;
 uint32_t tx_mailbox = 0;
 CAN_TxHeaderTypeDef* ptr_tx_header;
 uint8_t queue_size;
-daq_fault_record_t g_daq_fault_record;
+fault_record_t g_daq_fault_record;
 extern daq_timestamp_t g_timestamp;
+extern daq_fault_log_buffer_t g_fault_log_buffer;
 extern TaskHandle_t task_handles[DAQ_NO_OF_TASKS];
 /* =========================================== PRIVATE VARIABLES END =========================================== */
 /** @addtogroup Fault_Module
@@ -58,8 +60,11 @@ void DAQ_BKPSRAM_Write(void* toWrite, daq_bkpsram_write_type_t type)
 	switch(type)
 	{
 		case DAQ_WRITE_LOG:
+			memcpy((void*)DAQ_BKPSRAM_PREVIOUS_LOG_ADDR, (void*)DAQ_BKPSRAM_CURRENT_LOG_ADDR, sizeof(fault_log_t));
+			/* future improvement save the previous log correctly since for now the two logs contains the same data
+			 * updated: not tested yet
+			 * */
 			memcpy((void*)DAQ_BKPSRAM_CURRENT_LOG_ADDR, toWrite, sizeof(fault_log_t));
-			memcpy((void*)DAQ_BKPSRAM_PREVIOUS_LOG_ADDR, toWrite, sizeof(fault_log_t));
 			break;
 		case DAQ_CLEAR_CURRENT_LOG:
 			memset((void*)DAQ_BKPSRAM_CURRENT_LOG_ADDR, 0, sizeof(fault_log_t));
@@ -210,6 +215,33 @@ void DAQ_Fault_Blink(void *pvParameters)
 }
 void DAQ_CAN_Task(void *pvParameters)
 {
+	if(g_fault_log_buffer.current.reset_reason > DAQ_RESET_REASON_MIN &&
+		 g_fault_log_buffer.current.reset_reason < DAQ_RESET_REASON_MAX)
+	{
+		daq_can_msg_t can_msg_fault = {0};
+		daq_can_msg_fault_t encoder_msg_fault = {0};
+		// encoding the message
+		encoder_msg_fault.PC = (uint32_t) g_fault_log_buffer.current.stack_frame[6];
+		encoder_msg_fault.reset_reason = (uint32_t) g_fault_log_buffer.current.reset_reason;
+		encoder_msg_fault.time_hours   = (uint32_t) g_fault_log_buffer.current.timestamp.hours;
+		encoder_msg_fault.time_minutes = (uint32_t) g_fault_log_buffer.current.timestamp.minutes;
+		encoder_msg_fault.time_seconds = (uint32_t) g_fault_log_buffer.current.timestamp.seconds;
+		for(int i = 0; i < DAQ_NO_OF_READ_TASKS; i++) {
+			if(g_fault_log_buffer.current.task_records.tasks[i].error_count != g_fault_log_buffer.prev.task_records.tasks[i].error_count) {
+				encoder_msg_fault.task_handle = i;
+				encoder_msg_fault.task_error_count = (uint32_t) g_fault_log_buffer.current.task_records.tasks[i].error_count;
+			}
+		}
+		can_msg_fault.id = DAQ_CAN_ID_FAULT;
+		can_msg_fault.size = 8;
+		can_msg_fault.data = *((uint64_t*)&encoder_msg_fault);
+		ptr_tx_header->DLC = can_msg_fault.size;
+		ptr_tx_header->StdId = can_msg_fault.id;
+		if (HAL_CAN_AddTxMessage(&daq_can_handle, ptr_tx_header, &can_msg_fault.data, &tx_mailbox) == HAL_ERROR)
+		{
+			//Error_Handler();
+		}
+	}
 	daq_can_msg_t can_msg = {0};
 	while (1)
 	{
