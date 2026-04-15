@@ -122,6 +122,7 @@ typedef struct{
  */
 typedef enum{
 	DAQ_READ_PREVIOUS_LOG,
+	DAQ_READ_BUFFER_LOG, // ADDED
 	DAQ_READ_CURRENT_LOG,
 	DAQ_READ_STATUS_WORDS
 }daq_bkpsram_read_type_t;
@@ -194,9 +195,10 @@ typedef struct {
  *
  */
 typedef struct{
-    fault_log_t prev; /*!< The last successfully captured fault on the backup SRAM. */
+	fault_log_t prev; /*!< The previous captured fault on the backup SRAM. */
+    fault_log_t buffer; /*!< Copy of the current read fault to be accessed after deleting the current log from SRAM */ //new
     fault_log_t current; /*!< The current read fault on the backup SRAM. */
-}daq_fault_log_buffer_t;
+}daq_fault_log_snapshot_t;
 /**
  * @brief Initializes the backup SRAM and Fault Handlers.
  *
@@ -209,7 +211,7 @@ void DAQ_FaultLog_Init(void);
  * @note After the function successfully reads the current fault log, it
  * clears it so as not to be redundantly read again.
  */
-void DAQ_FaultLog_Read(daq_fault_log_buffer_t* log);
+void DAQ_FaultLog_Read(daq_fault_log_snapshot_t* log);
 /**
  * @brief Writes the received fault log as the current and previous fault logs on the backup SRAM.
  * @param a pointer to the log to be written.
@@ -303,14 +305,14 @@ typedef struct{
  CAN msg struct to encode the fault log readings
  */
 typedef struct{
-	uint32_t reset_reason : 4;
-	uint32_t time_seconds : 6;
-	uint32_t time_minutes : 6;
-	uint32_t time_hours   : 2;
-	uint32_t task_handle  : 4;
-	uint32_t task_error_count : 4;
-	uint32_t _padding : 6;
-	uint32_t PC;
+	uint32_t reset_reason : 4; /*!< One of the reset reasons in `daq_reset_reason_t`. */
+	uint32_t time_seconds : 6; /*!< The exact second of the error from `daq_timestamp_t`. */
+	uint32_t time_minutes : 6; /*!< The exact minute of the error `daq_timestamp_t`. */
+	uint32_t time_hours   : 2; /*!< The exact hour of the error `daq_timestamp_t`. */
+	uint32_t task_handle  : 4; /*!< The task handle of the erroneous task. */
+	uint32_t task_error_count : 4; /*!< The error count of the erroneous task. */
+	uint32_t _padding : 6; // Manual padding for predictable alignment.
+	uint32_t PC; /*!< The program counter at the exact moment of the error `from stack_registers_t`. */
 } daq_can_msg_fault_t;
 static_assert(sizeof(daq_can_msg_fault_t) == 8, "fault log CAN Message must be 8 bytes");
 

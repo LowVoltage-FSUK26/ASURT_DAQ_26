@@ -18,7 +18,7 @@ var group___fault___module =
       [ "task_records", "structfault__log__t.html#a0d211223b92e37fcb5c57f846ade8d9b", null ],
       [ "timestamp", "structfault__log__t.html#ab68ec75b7fddcfedcc68d9ce9140b12d", null ]
     ] ],
-    [ "daq_fault_log_buffer_t", "structdaq__fault__log__buffer__t.html", [
+    [ "daq_fault_log_snapshot_t", "structdaq__fault__log__buffer__t.html", [
       [ "current", "structdaq__fault__log__buffer__t.html#a48f1a285ea31b92c57e11697b73227e7", null ],
       [ "prev", "structdaq__fault__log__buffer__t.html#a9b440e185af3797a7221293b3ec4213d", null ]
     ] ],

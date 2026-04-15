@@ -23,7 +23,8 @@ typedef enum{
 	DAQ_BKPSRAM_STATE_ADDR 			= DAQ_BKPSRAM_BASE_ADDR,
 	DAQ_BKPSRAM_LOG_STATUS_ADDR 	= DAQ_BKPSRAM_BASE_ADDR + sizeof(daq_bkpsram_state_t),
 	DAQ_BKPSRAM_CURRENT_LOG_ADDR 	= DAQ_BKPSRAM_BASE_ADDR + sizeof(daq_status_words_t),
-	DAQ_BKPSRAM_PREVIOUS_LOG_ADDR 	= DAQ_BKPSRAM_BASE_ADDR + sizeof(daq_status_words_t) + sizeof(fault_log_t)
+	DAQ_BKPSRAM_BUFFER_LOG_ADDR     = DAQ_BKPSRAM_BASE_ADDR + sizeof(daq_status_words_t) + sizeof(fault_log_t),
+	DAQ_BKPSRAM_PREVIOUS_LOG_ADDR 	= DAQ_BKPSRAM_BASE_ADDR + sizeof(daq_status_words_t) + 2 * sizeof(fault_log_t)
 }daq_bkpsram_addr_t;
 /** @} */
 
