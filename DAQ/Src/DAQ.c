@@ -63,9 +63,6 @@ void DAQ_BKPSRAM_Write(void* toWrite, daq_bkpsram_write_type_t type)
 	switch(type)
 	{
 		case DAQ_WRITE_LOG:
-			/* future improvement save the previous log correctly since for now the two logs contains the same data
-			* updated but not tested yet
-			* */
 			memcpy((void*)DAQ_BKPSRAM_PREVIOUS_LOG_ADDR, (void*)DAQ_BKPSRAM_BUFFER_LOG_ADDR, sizeof(fault_log_t));
 			memcpy((void*)DAQ_BKPSRAM_BUFFER_LOG_ADDR, toWrite, sizeof(fault_log_t));
 			memcpy((void*)DAQ_BKPSRAM_CURRENT_LOG_ADDR, toWrite, sizeof(fault_log_t));
@@ -103,10 +100,10 @@ void DAQ_FaultLog_Init(void)
 	SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk
 		       |  SCB_SHCSR_BUSFAULTENA_Msk
 		       |  SCB_SHCSR_USGFAULTENA_Msk; // Enables the fault handlers (Hard fault isn't there because it's enabled by default).
-	if (__HAL_RCC_GET_FLAG(RCC_FLAG_PORRST)) { // check cold start or wwdg refresh using RCC power on reset flag
+	if (__HAL_RCC_GET_FLAG(RCC_FLAG_PORRST)) { // Check cold start or wwdg refresh using RCC power on reset flag
 	   memset((void*)DAQ_BKPSRAM_BASE_ADDR, 0, DAQ_BKPSRAM_USED_SIZE); // NULL the SRAM from garbage data after power on reset
+	   RCC->CSR |= RCC_CSR_RMVF; // clear the flag for the future wwdg refreshes
 	}
-	RCC->CSR |= RCC_CSR_RMVF; // clear the flag for the future wwdg refreshes
 	daq_status_words_t status = {.bkpsram_state = DAQ_BKPSRAM_INITIALIZED};
 	DAQ_BKPSRAM_Write(&status, DAQ_WRITE_BKPSRAM_STATE); // Writes 'DAQ_BKPSRAM_INITIALIZED' to the SRAM's state word.
 }
@@ -211,7 +208,6 @@ void DAQ_Task_Fault_Handler(void)
 	log.reset_reason = DAQ_RESET_REASON_TASKFAULTHANDLER;
 	log.task_records = g_daq_fault_record;
 	log.timestamp = g_timestamp;
-	log.stack_frame[6] = 0xEEEEEEEE; // Task fault PC
 	DAQ_FaultLog_Write(&log);
 	for(;;);
 }
@@ -238,7 +234,7 @@ void DAQ_CAN_Task(void *pvParameters)
 		encoder_msg_fault.time_seconds = (uint32_t) g_fault_log_snapshot.buffer.timestamp.seconds;
 		for(int i = 0; i < DAQ_NO_OF_READ_TASKS; i++) {
 			if(g_fault_log_snapshot.current.task_records.tasks[i].error_count != g_fault_log_snapshot.prev.task_records.tasks[i].error_count) {
-				encoder_msg_fault.task_handle = (uint32_t) (i + 2);
+				encoder_msg_fault.task_handle = (uint32_t) (i + 1); // The real task is i-1. This is done to distinguish Hardware faults from Task handler faults
 				encoder_msg_fault.task_error_count = (uint32_t) g_fault_log_snapshot.buffer.task_records.tasks[i].error_count;
 				break;
 			}
