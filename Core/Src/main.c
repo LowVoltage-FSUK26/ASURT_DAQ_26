@@ -57,7 +57,7 @@
 
 /* USER CODE BEGIN PV */
 daq_timestamp_t g_timestamp;
-daq_fault_log_buffer_t g_fault_log_buffer;
+daq_fault_log_snapshot_t g_fault_log_snapshot;
 
 TaskHandle_t task_handles[DAQ_NO_OF_TASKS];
 SemaphoreHandle_t g_i2c_mutex;
@@ -66,7 +66,7 @@ CAN_TxHeaderTypeDef can_tx_header;
 
 bool g_i2c_dma_flags[DAQ_NO_OF_I2C_DMA_DEVICES];
 daq_i2c_dma_device_t g_i2c_dma_device = I2C_DMA_NO_DEVICE;
-extern daq_fault_record_t g_daq_fault_record;
+extern fault_record_t g_daq_fault_record;
 extern DMA_HandleTypeDef hdma_tim1_ch1, hdma_tim1_ch2, hdma_tim1_ch3, hdma_tim1_ch4_trig_com;
 DMA_HandleTypeDef *proximity_dma_handlers[4] = {&hdma_tim1_ch1, &hdma_tim1_ch2, &hdma_tim1_ch3, &hdma_tim1_ch4_trig_com};
 
@@ -217,15 +217,15 @@ int main(void)
   DAQ_CAN_Init(&hcan1, &can_tx_header);
 
   DAQ_FaultLog_Init();
-  DAQ_FaultLog_Read(&g_fault_log_buffer);
+  DAQ_FaultLog_Read(&g_fault_log_snapshot);
 
-  if(g_fault_log_buffer.current.reset_reason > DAQ_RESET_REASON_MIN &&
-	 g_fault_log_buffer.current.reset_reason < DAQ_RESET_REASON_MAX)
+  if(g_fault_log_snapshot.current.reset_reason > DAQ_RESET_REASON_MIN &&
+	 g_fault_log_snapshot.current.reset_reason < DAQ_RESET_REASON_MAX)
 	  xTaskCreate(DAQ_Fault_Blink, "Fault_Blink"	, 64, NULL, 1, NULL);
   else
 	  xTaskCreate(Normal_Blink	, "Blink1"		, 64, NULL, 1, NULL);
   for(uint8_t i = 0; i < DAQ_NO_OF_READ_TASKS; i++)
-	  g_daq_fault_record.tasks[i].error_count = g_fault_log_buffer.current.task_records.tasks[i].error_count;
+	  g_daq_fault_record.tasks[i].error_count = g_fault_log_snapshot.current.task_records.tasks[i].error_count;
 
   if(g_daq_fault_record.tasks[PROX_TASK].error_count < DAQ_MAX_ERROR_COUNT)
   	  xTaskCreate(Prox_Task	, "Prox_Task", 256	, NULL, 8, &task_handles[PROX_TASK]);

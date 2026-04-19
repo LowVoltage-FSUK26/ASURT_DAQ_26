@@ -8,7 +8,7 @@
 #include "Temperature_Private.h"
 
 extern SemaphoreHandle_t g_i2c_mutex;           // Global mutex to protect I2C transactions
-extern daq_fault_record_t g_daq_fault_record;   // Shared DAQ fault log structure
+extern fault_record_t g_daq_fault_record;   // Shared DAQ fault log structure
 
 moving_avg_t temp_moving_avgs[TEMP_NO_OF_SENSORS]; // Per-sensor moving average filters
 temp_sensor_data_t temp_sensors_data[TEMP_NO_OF_SENSORS]; // Latest readings + metadata for each sensor

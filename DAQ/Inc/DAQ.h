@@ -122,6 +122,7 @@ typedef struct{
  */
 typedef enum{
 	DAQ_READ_PREVIOUS_LOG,
+	DAQ_READ_BUFFER_LOG, // ADDED
 	DAQ_READ_CURRENT_LOG,
 	DAQ_READ_STATUS_WORDS
 }daq_bkpsram_read_type_t;
@@ -157,13 +158,26 @@ typedef struct {
 	uint8_t error_count; /*!< Counts the number of errors the task has caused. */
 	uint8_t task_demoted; /*!< Set to 1 if the task was kicked from the system (ie the error count reached `DAQ_MAX_ERROR_COUNT`). */
 } task_stats_t;
+
+/* added 8/4/2026 struct to correctly offset the SP address */
+typedef struct {
+    uint32_t r0;
+    uint32_t r1;
+    uint32_t r2;
+    uint32_t r3;
+    uint32_t r12;
+    uint32_t lr;
+    uint32_t pc;
+    uint32_t xpsr;
+} stack_registers_t;
+/* end */
 /**
  * @brief A struct for each task's stats needed for fault detection and logging.
  *
  */
 typedef struct{
 	task_stats_t tasks[DAQ_NO_OF_READ_TASKS];
-}daq_fault_record_t;
+}fault_record_t;
 /**
  * @brief Contains all fault info to be logged to or read from the backup SRAM.
  *
@@ -172,8 +186,8 @@ typedef struct {
     uint8_t reset_reason; /*!< One of the reset reasons in `daq_reset_reason_t`. */
     uint8_t fault_status; /*!< Stores the fault status from the register `SCB->CFSR`. */
     uint32_t fault_address; /*!< Stores the fault address from the fault address registers in `SCB`. */
-    //uint32_t stack_frame[8]; /*!< Suggested future improvement */
-    daq_fault_record_t task_records; /*!< Stores all tasks' fault record */
+    uint32_t stack_frame[8];  /*!< Stores the 8 registers pushed by ARM in the stack from `stack_registers_t`. */
+    fault_record_t task_records; /*!< Stores all tasks' fault record */
     daq_timestamp_t timestamp; /*!< Stores the global timestamp of the DAQ system. */
 } fault_log_t;
 /**
@@ -181,9 +195,10 @@ typedef struct {
  *
  */
 typedef struct{
-    fault_log_t prev; /*!< The last successfully captured fault on the backup SRAM. */
+	fault_log_t prev; /*!< The previous captured fault on the backup SRAM. */
+    fault_log_t buffer; /*!< Copy of the current read fault to be accessed after deleting the current log from SRAM */ //new
     fault_log_t current; /*!< The current read fault on the backup SRAM. */
-}daq_fault_log_buffer_t;
+}daq_fault_log_snapshot_t;
 /**
  * @brief Initializes the backup SRAM and Fault Handlers.
  *
@@ -196,7 +211,7 @@ void DAQ_FaultLog_Init(void);
  * @note After the function successfully reads the current fault log, it
  * clears it so as not to be redundantly read again.
  */
-void DAQ_FaultLog_Read(daq_fault_log_buffer_t* log);
+void DAQ_FaultLog_Read(daq_fault_log_snapshot_t* log);
 /**
  * @brief Writes the received fault log as the current and previous fault logs on the backup SRAM.
  * @param a pointer to the log to be written.
@@ -219,6 +234,16 @@ void DAQ_WWDG_Task(void *pvParameters);
  * @brief Logs the fault info and stalls the system until a WWDG reset occurs.
  *
  */
+/* added 8/4/2026 the new fault handlers function which includes the SP */
+void DAQ_HardFault_Handler(stack_registers_t *frame);
+
+void DAQ_BusFault_Handler(stack_registers_t *frame);
+
+void DAQ_MemManage_Handler(stack_registers_t *frame);
+
+void DAQ_UsageFault_Handler(stack_registers_t *frame);
+/* end */
+
 void DAQ_Task_Fault_Handler(void);
 /**
  * @brief When a fault occurs, this task is created as a warning.
@@ -257,6 +282,8 @@ typedef enum
 	DAQ_CAN_ID_PROX_ENCODER,
 	DAQ_CAN_ID_GPS,
 	DAQ_CAN_ID_TEMP,
+	DAQ_CAN_ID_FAULT,
+	DAQ_CAN_ID_STEERING_ENC,
 } daq_can_id_t;
 /**
  * @brief Message Info to be enqueued in the CAN queue.
@@ -274,6 +301,21 @@ typedef struct{
  * Linear accelerations and Euler angles are encoded separately as different `daq_can_msg_imu_t` objects.
  *
  */
+/*
+ CAN msg struct to encode the fault log readings
+ */
+typedef struct{
+	uint32_t reset_reason : 4; /*!< One of the reset reasons in `daq_reset_reason_t`. */
+	uint32_t time_seconds : 6; /*!< The exact second of the error from `daq_timestamp_t`. */
+	uint32_t time_minutes : 6; /*!< The exact minute of the error `daq_timestamp_t`. */
+	uint32_t time_hours   : 2; /*!< The exact hour of the error `daq_timestamp_t`. */
+	uint32_t task_handle  : 4; /*!< The task handle of the erroneous task. */
+	uint32_t task_error_count : 4; /*!< The error count of the erroneous task. */
+	uint32_t _padding : 6; // Manual padding for predictable alignment.
+	uint32_t PC; /*!< The program counter at the exact moment of the error `from stack_registers_t`. */
+} daq_can_msg_fault_t;
+static_assert(sizeof(daq_can_msg_fault_t) == 8, "fault log CAN Message must be 8 bytes");
+
 typedef struct
 {
     int16_t x; /*!< x-component of either linear acceleration or Euler angle. */

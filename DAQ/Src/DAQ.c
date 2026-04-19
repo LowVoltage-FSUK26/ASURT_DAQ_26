@@ -9,6 +9,7 @@
 #include "stm32f4xx.h"
 #include "wwdg.h"
 #include "DAQ.h"
+#include "DAQ_Config.h"
 #include "DAQ_BKPSRAM_Private.h"
 
 /* =========================================== PRIVATE VARIABLES =========================================== */
@@ -17,8 +18,9 @@ CAN_HandleTypeDef daq_can_handle;
 uint32_t tx_mailbox = 0;
 CAN_TxHeaderTypeDef* ptr_tx_header;
 uint8_t queue_size;
-daq_fault_record_t g_daq_fault_record;
+fault_record_t g_daq_fault_record;
 extern daq_timestamp_t g_timestamp;
+extern daq_fault_log_snapshot_t g_fault_log_snapshot;
 extern TaskHandle_t task_handles[DAQ_NO_OF_TASKS];
 /* =========================================== PRIVATE VARIABLES END =========================================== */
 /** @addtogroup Fault_Module
@@ -36,6 +38,9 @@ void DAQ_BKPSRAM_Read(void* readTo, daq_bkpsram_read_type_t type)
 	{
 		case DAQ_READ_PREVIOUS_LOG:
 			memcpy(readTo, (void*)DAQ_BKPSRAM_PREVIOUS_LOG_ADDR, sizeof(fault_log_t));
+			break;
+		case DAQ_READ_BUFFER_LOG:
+			memcpy(readTo, (void*)DAQ_BKPSRAM_CURRENT_LOG_ADDR, sizeof(fault_log_t)); //new
 			break;
 		case DAQ_READ_CURRENT_LOG:
 			memcpy(readTo, (void*)DAQ_BKPSRAM_CURRENT_LOG_ADDR, sizeof(fault_log_t));
@@ -58,8 +63,9 @@ void DAQ_BKPSRAM_Write(void* toWrite, daq_bkpsram_write_type_t type)
 	switch(type)
 	{
 		case DAQ_WRITE_LOG:
+			memcpy((void*)DAQ_BKPSRAM_PREVIOUS_LOG_ADDR, (void*)DAQ_BKPSRAM_BUFFER_LOG_ADDR, sizeof(fault_log_t));
+			memcpy((void*)DAQ_BKPSRAM_BUFFER_LOG_ADDR, toWrite, sizeof(fault_log_t));
 			memcpy((void*)DAQ_BKPSRAM_CURRENT_LOG_ADDR, toWrite, sizeof(fault_log_t));
-			memcpy((void*)DAQ_BKPSRAM_PREVIOUS_LOG_ADDR, toWrite, sizeof(fault_log_t));
 			break;
 		case DAQ_CLEAR_CURRENT_LOG:
 			memset((void*)DAQ_BKPSRAM_CURRENT_LOG_ADDR, 0, sizeof(fault_log_t));
@@ -94,6 +100,10 @@ void DAQ_FaultLog_Init(void)
 	SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk
 		       |  SCB_SHCSR_BUSFAULTENA_Msk
 		       |  SCB_SHCSR_USGFAULTENA_Msk; // Enables the fault handlers (Hard fault isn't there because it's enabled by default).
+	if (__HAL_RCC_GET_FLAG(RCC_FLAG_PORRST)) { // Check cold start or wwdg refresh using RCC power on reset flag
+	   memset((void*)DAQ_BKPSRAM_BASE_ADDR, 0, DAQ_BKPSRAM_USED_SIZE); // NULL the SRAM from garbage data after power on reset
+	   RCC->CSR |= RCC_CSR_RMVF; // clear the flag for the future wwdg refreshes
+	}
 	daq_status_words_t status = {.bkpsram_state = DAQ_BKPSRAM_INITIALIZED};
 	DAQ_BKPSRAM_Write(&status, DAQ_WRITE_BKPSRAM_STATE); // Writes 'DAQ_BKPSRAM_INITIALIZED' to the SRAM's state word.
 }
@@ -106,14 +116,15 @@ BaseType_t DAQ_CAN_Msg_Dequeue(daq_can_msg_t* msg)
 {
     return xQueueReceive(daq_can_queue, msg, DAQ_CAN_MAX_WAIT_TICKS);
 }
-void DAQ_FaultLog_Read(daq_fault_log_buffer_t* log)
+void DAQ_FaultLog_Read(daq_fault_log_snapshot_t* snapshot)
 {
 	daq_status_words_t status = {0};
-	DAQ_BKPSRAM_Read(&(log->prev), DAQ_READ_PREVIOUS_LOG);
+	DAQ_BKPSRAM_Read(&(snapshot->prev), DAQ_READ_PREVIOUS_LOG);
+	DAQ_BKPSRAM_Read(&(snapshot->buffer), DAQ_READ_BUFFER_LOG);
 	DAQ_BKPSRAM_Read(&status, DAQ_READ_STATUS_WORDS);
 	if(status.bkpsram_state == DAQ_BKPSRAM_INITIALIZED && status.log_status == DAQ_FAULT_LOGGED)
 	{
-		DAQ_BKPSRAM_Read(&(log->current), DAQ_READ_CURRENT_LOG);
+		DAQ_BKPSRAM_Read(&(snapshot->current), DAQ_READ_CURRENT_LOG);
 		DAQ_BKPSRAM_Write(NULL, DAQ_CLEAR_CURRENT_LOG);
 		status.log_status = DAQ_FAULT_READ;
 		DAQ_BKPSRAM_Write(&status, DAQ_WRITE_LOG_STATUS);
@@ -210,6 +221,34 @@ void DAQ_Fault_Blink(void *pvParameters)
 }
 void DAQ_CAN_Task(void *pvParameters)
 {
+	if(g_fault_log_snapshot.buffer.reset_reason > DAQ_RESET_REASON_MIN &&
+		 g_fault_log_snapshot.buffer.reset_reason < DAQ_RESET_REASON_MAX)
+	{
+		daq_can_msg_t can_msg_fault = {0};
+		daq_can_msg_fault_t encoder_msg_fault = {0};
+		// encoding the message
+		encoder_msg_fault.PC = (uint32_t) g_fault_log_snapshot.buffer.stack_frame[6];
+		encoder_msg_fault.reset_reason = (uint32_t) g_fault_log_snapshot.buffer.reset_reason;
+		encoder_msg_fault.time_hours   = (uint32_t) g_fault_log_snapshot.buffer.timestamp.hours;
+		encoder_msg_fault.time_minutes = (uint32_t) g_fault_log_snapshot.buffer.timestamp.minutes;
+		encoder_msg_fault.time_seconds = (uint32_t) g_fault_log_snapshot.buffer.timestamp.seconds;
+		for(int i = 0; i < DAQ_NO_OF_READ_TASKS; i++) {
+			if(g_fault_log_snapshot.current.task_records.tasks[i].error_count != g_fault_log_snapshot.prev.task_records.tasks[i].error_count) {
+				encoder_msg_fault.task_handle = (uint32_t) (i + 1); // The real task is i-1. This is done to distinguish Hardware faults from Task handler faults
+				encoder_msg_fault.task_error_count = (uint32_t) g_fault_log_snapshot.buffer.task_records.tasks[i].error_count;
+				break;
+			}
+		}
+		can_msg_fault.id = DAQ_CAN_ID_FAULT;
+		can_msg_fault.size = 8;
+		can_msg_fault.data = *((uint64_t*)&encoder_msg_fault);
+		ptr_tx_header->DLC = can_msg_fault.size;
+		ptr_tx_header->StdId = can_msg_fault.id;
+		if (HAL_CAN_AddTxMessage(&daq_can_handle, ptr_tx_header, &can_msg_fault.data, &tx_mailbox) == HAL_ERROR)
+		{
+			//Error_Handler();
+		}
+	}
 	daq_can_msg_t can_msg = {0};
 	while (1)
 	{
@@ -218,7 +257,7 @@ void DAQ_CAN_Task(void *pvParameters)
 		{
 			ptr_tx_header->DLC = can_msg.size;
 			ptr_tx_header->StdId = can_msg.id;
-			//if(HAL_CAN_GetTxMailboxesFreeLevel(&daq_can_handle) > 0)
+			if(HAL_CAN_GetTxMailboxesFreeLevel(&daq_can_handle) > 0)
 			{
 				if (HAL_CAN_AddTxMessage(&daq_can_handle, ptr_tx_header, &can_msg.data, &tx_mailbox) == HAL_ERROR)
 				{

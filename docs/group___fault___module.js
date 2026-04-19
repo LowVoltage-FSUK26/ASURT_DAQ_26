@@ -10,7 +10,7 @@ var group___fault___module =
       [ "start_tick", "structtask__stats__t.html#a501ce28957de2f61f6edbee9c9365444", null ],
       [ "task_demoted", "structtask__stats__t.html#a8350f383d5bb4fc3bfbc85c468dffa7d", null ]
     ] ],
-    [ "daq_fault_record_t", "structdaq__fault__record__t.html", null ],
+    [ "fault_record_t", "structdaq__fault__record__t.html", null ],
     [ "fault_log_t", "structfault__log__t.html", [
       [ "fault_address", "structfault__log__t.html#a7152f53d70ddbefa1cbf770fae34804f", null ],
       [ "fault_status", "structfault__log__t.html#a9e453cf0494ab9b37976263559caeae0", null ],
@@ -18,7 +18,7 @@ var group___fault___module =
       [ "task_records", "structfault__log__t.html#a0d211223b92e37fcb5c57f846ade8d9b", null ],
       [ "timestamp", "structfault__log__t.html#ab68ec75b7fddcfedcc68d9ce9140b12d", null ]
     ] ],
-    [ "daq_fault_log_buffer_t", "structdaq__fault__log__buffer__t.html", [
+    [ "daq_fault_log_snapshot_t", "structdaq__fault__log__buffer__t.html", [
       [ "current", "structdaq__fault__log__buffer__t.html#a48f1a285ea31b92c57e11697b73227e7", null ],
       [ "prev", "structdaq__fault__log__buffer__t.html#a9b440e185af3797a7221293b3ec4213d", null ]
     ] ],

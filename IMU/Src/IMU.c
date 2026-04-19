@@ -15,7 +15,7 @@
 #endif /* PI */
 
 extern SemaphoreHandle_t g_i2c_mutex;
-extern daq_fault_record_t g_daq_fault_record;
+extern fault_record_t g_daq_fault_record;
 
 imu_reading_buffer_t imu_accels_buffer, imu_angles_buffer; // Angle and Acceleration buffers.
 

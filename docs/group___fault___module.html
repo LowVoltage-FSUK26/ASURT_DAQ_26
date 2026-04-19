@@ -106,11 +106,11 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Format for the DAQ system timestamp.  <a href="structdaq__timestamp__t.html#details">More...</a><br /></td></tr>
 <tr class="memitem:task_5Fstats_5Ft" id="r_task_5Fstats_5Ft"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtask__stats__t.html">task_stats_t</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A struct for task stats needed for fault detection and logging.  <a href="structtask__stats__t.html#details">More...</a><br /></td></tr>
-<tr class="memitem:daq_5Ffault_5Frecord_5Ft" id="r_daq_5Ffault_5Frecord_5Ft"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdaq__fault__record__t.html">daq_fault_record_t</a></td></tr>
+<tr class="memitem:daq_5Ffault_5Frecord_5Ft" id="r_daq_5Ffault_5Frecord_5Ft"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdaq__fault__record__t.html">fault_record_t</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A struct for each task's stats needed for fault detection and logging.  <a href="structdaq__fault__record__t.html#details">More...</a><br /></td></tr>
 <tr class="memitem:fault_5Flog_5Ft" id="r_fault_5Flog_5Ft"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfault__log__t.html">fault_log_t</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Contains all fault info to be logged to or read from the backup SRAM.  <a href="structfault__log__t.html#details">More...</a><br /></td></tr>
-<tr class="memitem:daq_5Ffault_5Flog_5Fbuffer_5Ft" id="r_daq_5Ffault_5Flog_5Fbuffer_5Ft"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdaq__fault__log__buffer__t.html">daq_fault_log_buffer_t</a></td></tr>
+<tr class="memitem:daq_5Ffault_5Flog_5Fbuffer_5Ft" id="r_daq_5Ffault_5Flog_5Fbuffer_5Ft"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdaq__fault__log__buffer__t.html">daq_fault_log_snapshot_t</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A buffer type for storing the previous and current faults.  <a href="structdaq__fault__log__buffer__t.html#details">More...</a><br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-enum-members" class="groupheader"><a id="enum-members" name="enum-members"></a>
@@ -165,7 +165,7 @@ Functions</h2></td></tr>
 <tr class="memitem:ga4ba22cd346be6422e7b81dcd19a8623b" id="r_ga4ba22cd346be6422e7b81dcd19a8623b"><td class="memItemLeft" align="right" valign="top"><a id="ga4ba22cd346be6422e7b81dcd19a8623b" name="ga4ba22cd346be6422e7b81dcd19a8623b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>DAQ_FaultLog_Init</b> (void)</td></tr>
 <tr class="memdesc:ga4ba22cd346be6422e7b81dcd19a8623b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the backup SRAM and Fault Handlers. <br /></td></tr>
-<tr class="memitem:ga5fbfc3d180b59e093406c100904c0835" id="r_ga5fbfc3d180b59e093406c100904c0835"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga5fbfc3d180b59e093406c100904c0835">DAQ_FaultLog_Read</a> (<a class="el" href="structdaq__fault__log__buffer__t.html">daq_fault_log_buffer_t</a> *log)</td></tr>
+<tr class="memitem:ga5fbfc3d180b59e093406c100904c0835" id="r_ga5fbfc3d180b59e093406c100904c0835"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga5fbfc3d180b59e093406c100904c0835">DAQ_FaultLog_Read</a> (<a class="el" href="structdaq__fault__log__buffer__t.html">daq_fault_log_snapshot_t</a> *log)</td></tr>
 <tr class="memdesc:ga5fbfc3d180b59e093406c100904c0835"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads the previous and current fault logs from the backup SRAM.  <br /></td></tr>
 <tr class="memitem:gae4d3ba8cd33d9e1f854ae35c009fbb4c" id="r_gae4d3ba8cd33d9e1f854ae35c009fbb4c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#gae4d3ba8cd33d9e1f854ae35c009fbb4c">DAQ_FaultLog_Write</a> (<a class="el" href="structfault__log__t.html">fault_log_t</a> *log)</td></tr>
 <tr class="memdesc:gae4d3ba8cd33d9e1f854ae35c009fbb4c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes the received fault log as the current and previous fault logs on the backup SRAM.  <br /></td></tr>
@@ -405,7 +405,7 @@ Suggested Future Improvements</h2>
         <tr>
           <td class="memname">void DAQ_FaultLog_Read </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structdaq__fault__log__buffer__t.html">daq_fault_log_buffer_t</a> *</td>          <td class="paramname"><span class="paramname"><em>log</em></span></td><td>)</td>
+          <td class="paramtype"><a class="el" href="structdaq__fault__log__buffer__t.html">daq_fault_log_snapshot_t</a> *</td>          <td class="paramname"><span class="paramname"><em>log</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
