@@ -157,7 +157,6 @@ void ADC_Task(void *pvParameters)
 {
 	TickType_t xLastWakeTime;
 	xLastWakeTime = xTaskGetTickCount();
-	int counter = 0;
 	for( ;; )
     {
 		g_daq_fault_record.tasks[ADC_TASK].start_tick = xTaskGetTickCount();

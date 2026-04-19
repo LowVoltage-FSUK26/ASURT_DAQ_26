@@ -175,7 +175,6 @@ void IMU_Task(void*pvParameters)
 {
 	TickType_t xLastWakeTime;
 	xLastWakeTime = xTaskGetTickCount();
-	 int counter = 0;
 	for( ;; )
 	{
 		g_daq_fault_record.tasks[IMU_TASK].start_tick = xTaskGetTickCount();
