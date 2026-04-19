@@ -9,7 +9,6 @@
 #define SRC_DAQ_BKPSRAM_PRIVATE_H_
 
 #include "DAQ.h"
-
 /**
  * @addtogroup Fault_Module
  * @{
@@ -24,8 +23,11 @@ typedef enum{
 	DAQ_BKPSRAM_LOG_STATUS_ADDR 	= DAQ_BKPSRAM_BASE_ADDR + sizeof(daq_bkpsram_state_t),
 	DAQ_BKPSRAM_CURRENT_LOG_ADDR 	= DAQ_BKPSRAM_BASE_ADDR + sizeof(daq_status_words_t),
 	DAQ_BKPSRAM_BUFFER_LOG_ADDR     = DAQ_BKPSRAM_BASE_ADDR + sizeof(daq_status_words_t) + sizeof(fault_log_t),
-	DAQ_BKPSRAM_PREVIOUS_LOG_ADDR 	= DAQ_BKPSRAM_BASE_ADDR + sizeof(daq_status_words_t) + 2 * sizeof(fault_log_t)
+	DAQ_BKPSRAM_PREVIOUS_LOG_ADDR 	= DAQ_BKPSRAM_BASE_ADDR + sizeof(daq_status_words_t) + 2 * sizeof(fault_log_t),
+	DAQ_BKPSRAM_END_ADDR = DAQ_BKPSRAM_PREVIOUS_LOG_ADDR + sizeof(fault_log_t)
 }daq_bkpsram_addr_t;
+
+#define DAQ_BKPSRAM_USED_SIZE (DAQ_BKPSRAM_END_ADDR - DAQ_BKPSRAM_BASE_ADDR)
 /** @} */
 
 #endif /* SRC_DAQ_BKPSRAM_PRIVATE_H_ */

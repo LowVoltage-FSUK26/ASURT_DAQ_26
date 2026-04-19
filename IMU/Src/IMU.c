@@ -175,13 +175,13 @@ void IMU_Task(void*pvParameters)
 {
 	TickType_t xLastWakeTime;
 	xLastWakeTime = xTaskGetTickCount();
-//	int counter = 0;
+	 int counter = 0;
 	for( ;; )
 	{
-//		if(g_daq_fault_record.tasks[IMU_TASK].error_count == 0 && counter++ == 250) {
-//			while (1);
-//		}
-
+		if(g_daq_fault_record.tasks[ADC_TASK].error_count == 0 && counter++ == 250) {
+				*((volatile uint32_t *)0xFFFFFFFF) = 0xDEADBEEF;
+			//	while(1);
+		}
 		g_daq_fault_record.tasks[IMU_TASK].start_tick = xTaskGetTickCount();
 		if (xSemaphoreTake(g_i2c_mutex, pdMS_TO_TICKS(100)) == pdTRUE)
 		{

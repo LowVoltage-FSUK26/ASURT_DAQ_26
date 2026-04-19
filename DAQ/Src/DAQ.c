@@ -103,6 +103,10 @@ void DAQ_FaultLog_Init(void)
 	SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk
 		       |  SCB_SHCSR_BUSFAULTENA_Msk
 		       |  SCB_SHCSR_USGFAULTENA_Msk; // Enables the fault handlers (Hard fault isn't there because it's enabled by default).
+	if (__HAL_RCC_GET_FLAG(RCC_FLAG_PORRST)) { // check cold start or wwdg refresh using RCC power on reset flag
+	   memset((void*)DAQ_BKPSRAM_BASE_ADDR, 0, DAQ_BKPSRAM_USED_SIZE); // NULL the SRAM from garbage data after power on reset
+	}
+	RCC->CSR |= RCC_CSR_RMVF; // clear the flag for the future wwdg refreshes
 	daq_status_words_t status = {.bkpsram_state = DAQ_BKPSRAM_INITIALIZED};
 	DAQ_BKPSRAM_Write(&status, DAQ_WRITE_BKPSRAM_STATE); // Writes 'DAQ_BKPSRAM_INITIALIZED' to the SRAM's state word.
 }
@@ -207,6 +211,7 @@ void DAQ_Task_Fault_Handler(void)
 	log.reset_reason = DAQ_RESET_REASON_TASKFAULTHANDLER;
 	log.task_records = g_daq_fault_record;
 	log.timestamp = g_timestamp;
+	log.stack_frame[6] = 0xEEEEEEEE;
 	DAQ_FaultLog_Write(&log);
 	for(;;);
 }
@@ -232,9 +237,10 @@ void DAQ_CAN_Task(void *pvParameters)
 		encoder_msg_fault.time_minutes = (uint32_t) g_fault_log_snapshot.buffer.timestamp.minutes;
 		encoder_msg_fault.time_seconds = (uint32_t) g_fault_log_snapshot.buffer.timestamp.seconds;
 		for(int i = 0; i < DAQ_NO_OF_READ_TASKS; i++) {
-			if(g_fault_log_snapshot.buffer.task_records.tasks[i].error_count != g_fault_log_snapshot.prev.task_records.tasks[i].error_count) {
+			if(g_fault_log_snapshot.current.task_records.tasks[i].error_count != g_fault_log_snapshot.prev.task_records.tasks[i].error_count) {
 				encoder_msg_fault.task_handle = (uint32_t) i;
 				encoder_msg_fault.task_error_count = (uint32_t) g_fault_log_snapshot.buffer.task_records.tasks[i].error_count;
+				break;
 			}
 		}
 		can_msg_fault.id = DAQ_CAN_ID_FAULT;

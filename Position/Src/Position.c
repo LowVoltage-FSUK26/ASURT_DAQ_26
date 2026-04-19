@@ -160,9 +160,6 @@ void ADC_Task(void *pvParameters)
 	int counter = 0;
 	for( ;; )
     {
-		if(g_daq_fault_record.tasks[ADC_TASK].error_count == 0 && counter++ == 250) {
-			*((volatile uint32_t *)0xFFFFFFFF) = 0xDEADBEEF;
-		}
 		g_daq_fault_record.tasks[ADC_TASK].start_tick = xTaskGetTickCount();
 
 		// Raw data is already read by DMA.
