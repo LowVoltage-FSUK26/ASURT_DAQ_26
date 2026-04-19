@@ -211,7 +211,7 @@ void DAQ_Task_Fault_Handler(void)
 	log.reset_reason = DAQ_RESET_REASON_TASKFAULTHANDLER;
 	log.task_records = g_daq_fault_record;
 	log.timestamp = g_timestamp;
-	log.stack_frame[6] = 0xEEEEEEEE;
+	log.stack_frame[6] = 0xEEEEEEEE; // Task fault PC
 	DAQ_FaultLog_Write(&log);
 	for(;;);
 }
@@ -238,7 +238,7 @@ void DAQ_CAN_Task(void *pvParameters)
 		encoder_msg_fault.time_seconds = (uint32_t) g_fault_log_snapshot.buffer.timestamp.seconds;
 		for(int i = 0; i < DAQ_NO_OF_READ_TASKS; i++) {
 			if(g_fault_log_snapshot.current.task_records.tasks[i].error_count != g_fault_log_snapshot.prev.task_records.tasks[i].error_count) {
-				encoder_msg_fault.task_handle = (uint32_t) i;
+				encoder_msg_fault.task_handle = (uint32_t) (i + 2);
 				encoder_msg_fault.task_error_count = (uint32_t) g_fault_log_snapshot.buffer.task_records.tasks[i].error_count;
 				break;
 			}
