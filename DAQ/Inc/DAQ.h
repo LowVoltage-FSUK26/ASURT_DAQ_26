@@ -52,9 +52,11 @@ typedef enum {
 	GPS_TASK,
 	ADC_TASK,
 	TEMP_TASK,
+//	DAQ_NO_OF_READ_TASKS,
 	CAN_RX_TASK, //Added
 	CAN_TX_TASK,
-	WWDG_TASK
+	WWDG_TASK,
+//	DAQ_NO_OF_TASKS,
 }daq_task_handle_t;
 
 /** @addtogroup Fault_Module

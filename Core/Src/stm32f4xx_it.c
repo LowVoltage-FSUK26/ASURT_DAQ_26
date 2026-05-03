@@ -47,6 +47,7 @@
 extern I2C_HandleTypeDef hi2c1;
 extern daq_timestamp_t g_timestamp;
 extern fault_record_t g_daq_fault_record;
+extern CAN_HandleTypeDef hcan1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -413,5 +414,8 @@ void DMA2_Stream6_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
-
+void CAN1_RX0_IRQHandler(void)
+{
+    HAL_CAN_IRQHandler(&hcan1);  // ← is this present?
+}
 /* USER CODE END 1 */

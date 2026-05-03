@@ -213,8 +213,10 @@ int main(void)
   GPS_Init(&hi2c1);
   Temp_Init(&hi2c1);
 
-  HAL_CAN_Start(&hcan1);
   DAQ_CAN_Init(&hcan1, &can_tx_header);
+  HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
+  HAL_CAN_Start(&hcan1);
+
 
   DAQ_FaultLog_Init();
   DAQ_FaultLog_Read(&g_fault_log_snapshot);

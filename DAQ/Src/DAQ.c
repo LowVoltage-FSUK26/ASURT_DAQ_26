@@ -86,6 +86,7 @@ void DAQ_BKPSRAM_Write(void* toWrite, daq_bkpsram_write_type_t type)
 void DAQ_CAN_Init(CAN_HandleTypeDef *can_handle, CAN_TxHeaderTypeDef* can_tx_header)
 {
 	daq_can_tx_queue = xQueueCreate(10, sizeof(daq_can_msg_t));
+	daq_can_rx_queue = xQueueCreate(1, sizeof(daq_can_msg_t));
     daq_can_handle = *can_handle;
     can_tx_header->IDE = CAN_ID_STD;
     can_tx_header->RTR = CAN_RTR_DATA;
@@ -120,27 +121,24 @@ BaseType_t DAQ_CAN_Tx_Msg_Dequeue(daq_can_msg_t* msg)
 }
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 {
-    if(hcan1 == &daq_can_handle)
-    {
+
         CAN_RxHeaderTypeDef rx_header = {0};
         daq_can_msg_t msg = {0};
-
         HAL_CAN_GetRxMessage(hcan1, CAN_RX_FIFO0, &rx_header, (uint8_t*)&msg.data);
         msg.id   = rx_header.StdId;
         msg.size = rx_header.DLC;
-
         DAQ_CAN_Rx_Msg_Enqueue(&msg);  // hand off to Rx task
-    }
+
 }
-void DAQ_CAN_Rx_Msg_Enqueue(daq_can_msg_t *msg)
+void DAQ_CAN_Rx_Msg_Enqueue(daq_can_msg_t* msg)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    xQueueSendFromISR(daq_can_rx_queue, msg, &xHigherPriorityTaskWoken);
+    xQueueOverwriteFromISR(daq_can_rx_queue, msg, &xHigherPriorityTaskWoken);
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
-BaseType_t DAQ_CAN_Rx_Msg_Dequeue(daq_can_msg_t *msg)
+BaseType_t DAQ_CAN_Rx_Msg_Dequeue(daq_can_msg_t* msg)
 {
-    return xQueueReceive(daq_can_rx_queue, &msg, pdMS_TO_TICKS(DAQ_CAN_TIMEOUT_MS)) == pdTRUE;
+    return xQueueReceive(daq_can_rx_queue, msg, pdMS_TO_TICKS(DAQ_CAN_TIMEOUT_MS)) == pdTRUE;
 }
 void DAQ_CAN_SendStatus(daq_can_status_t status)
 {
@@ -309,7 +307,6 @@ void DAQ_CAN_Tx_Task(void *pvParameters)
 }
 void DAQ_CAN_Rx_Task(void *pvParameters)
 {
-    daq_can_rx_queue = xQueueCreate(1, sizeof(daq_can_msg_t));
 
     daq_can_msg_t rx_msg = {0};
 
