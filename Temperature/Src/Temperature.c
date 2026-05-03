@@ -101,7 +101,7 @@ void Temp_Task(void *pvParameters)
         	can_msg_temp.size = 8;
         	can_msg_temp.data = *((uint64_t*)&encoder_msg_temp);
 
-        	DAQ_CAN_Msg_Enqueue(&can_msg_temp);
+        	DAQ_CAN_Tx_Msg_Enqueue(&can_msg_temp);
 
         	// Store current readings for change detection in next cycle
         	for(uint8_t i = 0; i < TEMP_NO_OF_SENSORS; i++)

@@ -238,8 +238,8 @@ int main(void)
 	  xTaskCreate(IMU_Task	, "IMU_Task" , 256	, NULL, 7, &task_handles[IMU_TASK]);
   else
   {
-	  xTaskCreate(IMU_Task	, "IMU_Task" , 256	, NULL, 0, &task_handles[IMU_TASK]);
-	  g_daq_fault_record.tasks[IMU_TASK].task_demoted = 1;
+	 xTaskCreate(IMU_Task	, "IMU_Task" , 256	, NULL, 0, &task_handles[IMU_TASK]);
+	 g_daq_fault_record.tasks[IMU_TASK].task_demoted = 1;
   }
   if(g_daq_fault_record.tasks[GPS_TASK].error_count < DAQ_MAX_ERROR_COUNT)
   	  xTaskCreate(GPS_Task	, "GPS_task" , 256	, NULL, 6, &task_handles[GPS_TASK]);
@@ -262,7 +262,8 @@ int main(void)
 	  xTaskCreate(Temp_Task	, "Temp_task", 256 	, NULL, 0, &task_handles[TEMP_TASK]);
 	  g_daq_fault_record.tasks[TEMP_TASK].task_demoted = 1;
   }
-  xTaskCreate(DAQ_CAN_Task	, "CAN_task" , 128	, NULL, 3, &task_handles[CAN_TASK]);
+  xTaskCreate(DAQ_CAN_Tx_Task	, "CAN_TX_TASK" , 128	, NULL, 3, &task_handles[CAN_TX_TASK]);
+  xTaskCreate(DAQ_CAN_Rx_Task   , "CAN_RX_TASK", 128   , NULL, 3, &task_handles[CAN_RX_TASK]);
   xTaskCreate(DAQ_WWDG_Task	, "WWDG_task", 128	, NULL, 9, &task_handles[WWDG_TASK]);
 
   HAL_WWDG_Refresh(&hwwdg);

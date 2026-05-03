@@ -190,7 +190,7 @@ void ADC_Task(void *pvParameters)
 			can_msg_adc.data = *((uint64_t*)(&encoder_msg_adc));
 			can_msg_adc.size = 8;
 
-			DAQ_CAN_Msg_Enqueue(&can_msg_adc);
+			DAQ_CAN_Tx_Msg_Enqueue(&can_msg_adc);
 
 			// Save current readings to previous.
 			for(uint8_t i = 0; i < DAQ_NO_OF_ADC_SENSORS; i++)

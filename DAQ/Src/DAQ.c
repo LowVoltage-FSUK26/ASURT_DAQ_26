@@ -13,12 +13,14 @@
 #include "DAQ_BKPSRAM_Private.h"
 
 /* =========================================== PRIVATE VARIABLES =========================================== */
-QueueHandle_t daq_can_queue;
+QueueHandle_t daq_can_tx_queue;
+QueueHandle_t daq_can_rx_queue;
 CAN_HandleTypeDef daq_can_handle;
 uint32_t tx_mailbox = 0;
 CAN_TxHeaderTypeDef* ptr_tx_header;
 uint8_t queue_size;
 fault_record_t g_daq_fault_record;
+uint32_t g_last_can_rx_tick  = 0;
 extern daq_timestamp_t g_timestamp;
 extern daq_fault_log_snapshot_t g_fault_log_snapshot;
 extern TaskHandle_t task_handles[DAQ_NO_OF_TASKS];
@@ -83,7 +85,7 @@ void DAQ_BKPSRAM_Write(void* toWrite, daq_bkpsram_write_type_t type)
 /** @} */
 void DAQ_CAN_Init(CAN_HandleTypeDef *can_handle, CAN_TxHeaderTypeDef* can_tx_header)
 {
-	daq_can_queue = xQueueCreate(10, sizeof(daq_can_msg_t));
+	daq_can_tx_queue = xQueueCreate(10, sizeof(daq_can_msg_t));
     daq_can_handle = *can_handle;
     can_tx_header->IDE = CAN_ID_STD;
     can_tx_header->RTR = CAN_RTR_DATA;
@@ -108,13 +110,50 @@ void DAQ_FaultLog_Init(void)
 	DAQ_BKPSRAM_Write(&status, DAQ_WRITE_BKPSRAM_STATE); // Writes 'DAQ_BKPSRAM_INITIALIZED' to the SRAM's state word.
 }
 
-void DAQ_CAN_Msg_Enqueue(daq_can_msg_t* message)
+void DAQ_CAN_Tx_Msg_Enqueue(daq_can_msg_t* message)
 {
-    xQueueSend(daq_can_queue, message, 2);
+    xQueueSend(daq_can_tx_queue, message, 2);
 }
-BaseType_t DAQ_CAN_Msg_Dequeue(daq_can_msg_t* msg)
+BaseType_t DAQ_CAN_Tx_Msg_Dequeue(daq_can_msg_t* msg)
 {
-    return xQueueReceive(daq_can_queue, msg, DAQ_CAN_MAX_WAIT_TICKS);
+    return xQueueReceive(daq_can_tx_queue, msg, DAQ_CAN_MAX_WAIT_TICKS);
+}
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
+{
+    if(hcan1 == &daq_can_handle)
+    {
+        CAN_RxHeaderTypeDef rx_header = {0};
+        daq_can_msg_t msg = {0};
+
+        HAL_CAN_GetRxMessage(hcan1, CAN_RX_FIFO0, &rx_header, (uint8_t*)&msg.data);
+        msg.id   = rx_header.StdId;
+        msg.size = rx_header.DLC;
+
+        DAQ_CAN_Rx_Msg_Enqueue(&msg);  // hand off to Rx task
+    }
+}
+void DAQ_CAN_Rx_Msg_Enqueue(daq_can_msg_t *msg)
+{
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    xQueueSendFromISR(daq_can_rx_queue, msg, &xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+BaseType_t DAQ_CAN_Rx_Msg_Dequeue(daq_can_msg_t *msg)
+{
+    return xQueueReceive(daq_can_rx_queue, &msg, pdMS_TO_TICKS(DAQ_CAN_TIMEOUT_MS)) == pdTRUE;
+}
+void DAQ_CAN_SendStatus(daq_can_status_t status)
+{
+    daq_can_msg_can_status_t encoder_msg_can_status = {0};
+    encoder_msg_can_status.status        = (uint64_t) status;
+    encoder_msg_can_status.last_rx_tick  = (uint64_t) g_last_can_rx_tick;
+
+    daq_can_msg_t can_msg = {0};
+    can_msg.id   = DAQ_CAN_ID_CAN_STATUS;
+    can_msg.size = sizeof(daq_can_msg_can_status_t);
+    can_msg.data = *((uint64_t*)&encoder_msg_can_status);
+
+    DAQ_CAN_Tx_Msg_Enqueue(&can_msg);
 }
 void DAQ_FaultLog_Read(daq_fault_log_snapshot_t* snapshot)
 {
@@ -219,11 +258,12 @@ void DAQ_Fault_Blink(void *pvParameters)
         HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
     }
 }
-void DAQ_CAN_Task(void *pvParameters)
+void DAQ_CAN_Tx_Task(void *pvParameters)
 {
 	if(g_fault_log_snapshot.buffer.reset_reason > DAQ_RESET_REASON_MIN &&
 		 g_fault_log_snapshot.buffer.reset_reason < DAQ_RESET_REASON_MAX)
 	{
+		// sending fault log message after system error
 		daq_can_msg_t can_msg_fault = {0};
 		daq_can_msg_fault_t encoder_msg_fault = {0};
 		// encoding the message
@@ -253,7 +293,7 @@ void DAQ_CAN_Task(void *pvParameters)
 	while (1)
 	{
 		// Blocks if the Queue is empty.
-		if(DAQ_CAN_Msg_Dequeue(&can_msg) == pdTRUE)
+		if(DAQ_CAN_Tx_Msg_Dequeue(&can_msg) == pdTRUE)
 		{
 			ptr_tx_header->DLC = can_msg.size;
 			ptr_tx_header->StdId = can_msg.id;
@@ -266,4 +306,27 @@ void DAQ_CAN_Task(void *pvParameters)
 			}
 		}
 	}
+}
+void DAQ_CAN_Rx_Task(void *pvParameters)
+{
+    daq_can_rx_queue = xQueueCreate(1, sizeof(daq_can_msg_t));
+
+    daq_can_msg_t rx_msg = {0};
+
+    for(;;)
+    {
+        if(DAQ_CAN_Rx_Msg_Dequeue(&rx_msg) == pdTRUE)
+        {
+            g_last_can_rx_tick = xTaskGetTickCount();
+        }
+        else {
+        	daq_can_status_t status = DAQ_CAR_CAN_TIMEOUT;
+
+        	if(daq_can_handle.Instance->ESR & CAN_ESR_BOFF)
+        	{
+        		status = DAQ_CAR_CAN_BUS_OFF;
+        	}
+        	DAQ_CAN_SendStatus(status);
+        }
+    }
 }

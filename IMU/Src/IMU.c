@@ -204,7 +204,7 @@ void IMU_Task(void*pvParameters)
 			can_msg_imu_angle.size = 8;
 			can_msg_imu_angle.data = *((uint64_t*)(&encoder_msg_imu_angle));
 
-			DAQ_CAN_Msg_Enqueue(&can_msg_imu_angle);
+			DAQ_CAN_Tx_Msg_Enqueue(&can_msg_imu_angle);
 
 			// Save current data to previous to check if it changed significantly.
 			imu_angles_buffer.prev.x = imu_angles_buffer.current.x;
@@ -226,7 +226,7 @@ void IMU_Task(void*pvParameters)
 			can_msg_imu_acceleration.size = 8;
 			can_msg_imu_acceleration.data = *((uint64_t*)(&encoder_msg_imu_acceleration));
 
-			DAQ_CAN_Msg_Enqueue(&can_msg_imu_acceleration);
+			DAQ_CAN_Tx_Msg_Enqueue(&can_msg_imu_acceleration);
 
 			// Save current data to previous to check if it changed significantly.
 			imu_accels_buffer.prev.x = imu_accels_buffer.current.x;

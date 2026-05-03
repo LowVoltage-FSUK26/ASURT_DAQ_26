@@ -23,6 +23,8 @@
 
 #define DAQ_CAN_MAX_WAIT_TICKS 			10 // Max CAN waiting time before at least a message is enqueued.
 
+#define DAQ_CAN_TIMEOUT_MS    			500U // CAN bus receive timeout
+
 
 /**
  * @addtogroup Trace_Module

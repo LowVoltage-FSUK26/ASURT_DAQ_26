@@ -147,7 +147,7 @@ void GPS_Task(void *pvParameters)
         		can_msg_gps.id = DAQ_CAN_ID_GPS;
         		can_msg_gps.size = 8;
         		can_msg_gps.data = *((uint64_t*)&encoder_msg_gps);
-        		DAQ_CAN_Msg_Enqueue(&can_msg_gps);
+        		DAQ_CAN_Tx_Msg_Enqueue(&can_msg_gps);
         	}
         }
 
