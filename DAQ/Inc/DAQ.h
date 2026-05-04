@@ -52,8 +52,11 @@ typedef enum {
 	GPS_TASK,
 	ADC_TASK,
 	TEMP_TASK,
-	CAN_TASK,
-	WWDG_TASK
+//	DAQ_NO_OF_READ_TASKS,
+	CAN_RX_TASK, //Added
+	CAN_TX_TASK,
+	WWDG_TASK,
+//	DAQ_NO_OF_TASKS,
 }daq_task_handle_t;
 
 /** @addtogroup Fault_Module
@@ -284,6 +287,7 @@ typedef enum
 	DAQ_CAN_ID_TEMP,
 	DAQ_CAN_ID_FAULT,
 	DAQ_CAN_ID_STEERING_ENC,
+	DAQ_CAN_ID_CAN_STATUS, // Added
 } daq_can_id_t;
 /**
  * @brief Message Info to be enqueued in the CAN queue.
@@ -295,6 +299,12 @@ typedef struct{
     uint16_t id;   /*!< 11-bit CAN message id. Must be the least-significant 11 bits. */
     uint8_t size;  /*!< Size of the data in bytes. */
 } daq_can_msg_t;
+// define the CAN bus status
+typedef enum {
+    DAQ_CAR_CAN_OK = 0,
+    DAQ_CAR_CAN_TIMEOUT,
+    DAQ_CAR_CAN_BUS_OFF,
+} daq_can_status_t;
 /**
  * @brief Format for encoding IMU readings for transmission via CAN.
  *
@@ -390,6 +400,13 @@ typedef struct
     uint16_t temp_rear_right;
 } daq_can_msg_temp_t;
 static_assert(sizeof(daq_can_msg_temp_t) == 8, "Temperature CAN Message must be 8 bytes");
+// DAQ can failure message
+typedef struct {
+    uint64_t  status: 		 8;
+    uint64_t last_rx_tick:  32;
+    uint64_t  padding:	    24;
+} daq_can_msg_can_status_t;
+static_assert(sizeof(daq_can_msg_can_status_t) == 8, "CAN status message must be 8 bytes");
 /**
  * @brief Initializes the CAN task by starting CAN communication and setting the can_tx_header.
  *
@@ -401,10 +418,10 @@ void DAQ_CAN_Init(CAN_HandleTypeDef *can_handle, CAN_TxHeaderTypeDef* can_tx_hea
  * @brief Enqueues a CAN message of type `daq_can_msg_t` to the FreeRTOS queue to be transmitted on CAN bus.
  * @param msg Pointer to CAN message object to be enqueued.
  *
- * After enqueuing, the message then dequeued by the `DAQ_CAN_Msg_Dequeue`
- * inside the `DAQ_CAN_Task` for transmitting on the CAN bus.
+ * After enqueuing, the message then dequeued by the `DAQ_CAN_Tx_Msg_Dequeue`
+ * inside the `DAQ_CAN_Tx_Task` for transmitting on the CAN bus.
  */
-void DAQ_CAN_Msg_Enqueue(daq_can_msg_t* msg);
+void DAQ_CAN_Tx_Msg_Enqueue(daq_can_msg_t* msg);
 /**
  * @brief Dequeues a CAN message of type `daq_can_msg_t` from the FreeRTOS CAN queue.
  *
@@ -412,9 +429,9 @@ void DAQ_CAN_Msg_Enqueue(daq_can_msg_t* msg);
  * @return `pdTRUE` if successfully executed
  * @attention This function should only be used in CAN task. If the queue is empty, it will block the task until the queue is not empty.
  *
- * After dequeuing inside the `DAQ_CAN_Task`, the message is transmitted on the CAN bus.
+ * After dequeuing inside the `DAQ_CAN_Tx_Task`, the message is transmitted on the CAN bus.
  */
-BaseType_t DAQ_CAN_Msg_Dequeue(daq_can_msg_t* msg);
+BaseType_t DAQ_CAN_Tx_Msg_Dequeue(daq_can_msg_t* msg);
 /**
  * @brief A FreeRTOS task that dequeues the CAN message and transmits it.
  *
@@ -424,7 +441,17 @@ BaseType_t DAQ_CAN_Msg_Dequeue(daq_can_msg_t* msg);
  * unblocked when a new message is added to the queue.
  *
  */
-void DAQ_CAN_Task(void *pvParameters);
+void DAQ_CAN_Tx_Task(void *pvParameters);
+
+// This function enqueues the received message from the CAN to the Rx queue
+void DAQ_CAN_Rx_Msg_Enqueue(daq_can_msg_t *msg);
+
+// This function Dequeues the received message
+BaseType_t DAQ_CAN_Rx_Msg_Dequeue(daq_can_msg_t *msg);
+
+// The main task for receiving CAN messages
+void DAQ_CAN_Rx_Task(void *pvParameters);
+
 /** @} */
 
 #endif /* DAQ_DAQ_H_ */

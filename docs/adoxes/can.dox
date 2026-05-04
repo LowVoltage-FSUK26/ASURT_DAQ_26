@@ -27,7 +27,7 @@ For any sensor reading (accelerations, suspension heights, etc.):
     - Update "previous" values to current readings (preventing redundant messages)
     - Maintain state for next change detection cycle
 
-The `DAQ_CAN_Task()` then gets unblocked when a message is added to the queue, and it transmits the message. 
+The `DAQ_CAN_Tx_Task()` then gets unblocked when a message is added to the queue, and it transmits the message. 
 
  Generally speaking, instead of periodically transmitting all sensor data at fixed intervals, the system:
  1. Tracks both current and previous values for each sensor channel

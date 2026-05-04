@@ -23,6 +23,8 @@
 
 #define DAQ_CAN_MAX_WAIT_TICKS 			10 // Max CAN waiting time before at least a message is enqueued.
 
+#define DAQ_CAN_TIMEOUT_MS    			500U // CAN bus receive timeout
+
 
 /**
  * @addtogroup Trace_Module
@@ -48,11 +50,21 @@
 /*===========================================================================*/
 
 /**
- * @breif defines the number of different task types.
+ * @brief Defines the number of different task types with explicit breakdown.
+ * 
+ * This enum breaks down tasks by category to prevent array bounds overflow.
+ * If you add a new task, update the corresponding category count.
  */
 typedef enum{
-	DAQ_NO_OF_READ_TASKS = 5,
-	DAQ_NO_OF_TASKS 	 = DAQ_NO_OF_READ_TASKS + 2 // added 2 for the WWDG and CAN tasks.
+	/* Sensor data acquisition tasks */
+	DAQ_NO_OF_SENSOR_TASKS = 5,  // PROX, IMU, GPS, ADC, TEMP
+	/* System management tasks */
+	DAQ_NO_OF_MANAGEMENT_TASKS = 1,  // WWDG watchdog task
+	/* CAN bus communication tasks */
+	DAQ_NO_OF_CAN_TASKS = 2,  // CAN_RX and CAN_TX tasks
+	/* Total tasks */
+	DAQ_NO_OF_READ_TASKS = DAQ_NO_OF_SENSOR_TASKS,
+	DAQ_NO_OF_TASKS = DAQ_NO_OF_SENSOR_TASKS + DAQ_NO_OF_MANAGEMENT_TASKS + DAQ_NO_OF_CAN_TASKS
 }daq_task_num_t;
 /**
  * @breif defines the number of ADC related sensors.

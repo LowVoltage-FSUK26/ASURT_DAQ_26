@@ -143,7 +143,7 @@ void Prox_Task(void *pvParameters)
 
         	// Pack and enqueue CAN message
         	can_msg_prox.data = *((uint64_t*)&encoder_msg_prox);
-        	DAQ_CAN_Msg_Enqueue(&can_msg_prox);
+        	DAQ_CAN_Tx_Msg_Enqueue(&can_msg_prox);
 
         	// Update previous RPM values to current ones for change detection
         	for(uint8_t i = 0; i < PROX_NO_OF_WHEELS; i++)

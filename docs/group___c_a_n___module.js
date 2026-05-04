@@ -17,7 +17,7 @@ var group___c_a_n___module =
     [ "DAQ_CheckChange", "group___c_a_n___module.html#gacdad54e43941e464cde6b82f0a794579", null ],
     [ "daq_can_id_t", "group___c_a_n___module.html#gacc936b6185000d34f1864d167e7cab74", null ],
     [ "DAQ_CAN_Init", "group___c_a_n___module.html#ga30809f1562927951e3b79ebe36f97bd0", null ],
-    [ "DAQ_CAN_Msg_Dequeue", "group___c_a_n___module.html#ga155876876ad156396ffbf3527f1fb974", null ],
-    [ "DAQ_CAN_Msg_Enqueue", "group___c_a_n___module.html#ga4b100c228a2381176b7b0e53a63a1109", null ],
-    [ "DAQ_CAN_Task", "group___c_a_n___module.html#ga2e1bd65d6cd92bc4116814beca1ab1ff", null ]
+    [ "DAQ_CAN_Tx_Msg_Dequeue", "group___c_a_n___module.html#ga155876876ad156396ffbf3527f1fb974", null ],
+    [ "DAQ_CAN_Tx_Msg_Enqueue", "group___c_a_n___module.html#ga4b100c228a2381176b7b0e53a63a1109", null ],
+    [ "DAQ_CAN_Tx_Task", "group___c_a_n___module.html#ga2e1bd65d6cd92bc4116814beca1ab1ff", null ]
 ];

@@ -136,11 +136,11 @@ Enumerations</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:ga30809f1562927951e3b79ebe36f97bd0" id="r_ga30809f1562927951e3b79ebe36f97bd0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga30809f1562927951e3b79ebe36f97bd0">DAQ_CAN_Init</a> (CAN_HandleTypeDef *can_handle, CAN_TxHeaderTypeDef *can_tx_header)</td></tr>
 <tr class="memdesc:ga30809f1562927951e3b79ebe36f97bd0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the CAN task by starting CAN communication and setting the can_tx_header.  <br /></td></tr>
-<tr class="memitem:ga4b100c228a2381176b7b0e53a63a1109" id="r_ga4b100c228a2381176b7b0e53a63a1109"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga4b100c228a2381176b7b0e53a63a1109">DAQ_CAN_Msg_Enqueue</a> (<a class="el" href="structdaq__can__msg__t.html">daq_can_msg_t</a> *msg)</td></tr>
+<tr class="memitem:ga4b100c228a2381176b7b0e53a63a1109" id="r_ga4b100c228a2381176b7b0e53a63a1109"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga4b100c228a2381176b7b0e53a63a1109">DAQ_CAN_Tx_Msg_Enqueue</a> (<a class="el" href="structdaq__can__msg__t.html">daq_can_msg_t</a> *msg)</td></tr>
 <tr class="memdesc:ga4b100c228a2381176b7b0e53a63a1109"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enqueues a CAN message of type <span class="tt"><a class="el" href="structdaq__can__msg__t.html" title="Message Info to be enqueued in the CAN queue.">daq_can_msg_t</a></span> to the FreeRTOS queue to be transmitted on CAN bus.  <br /></td></tr>
-<tr class="memitem:ga155876876ad156396ffbf3527f1fb974" id="r_ga155876876ad156396ffbf3527f1fb974"><td class="memItemLeft" align="right" valign="top">BaseType_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga155876876ad156396ffbf3527f1fb974">DAQ_CAN_Msg_Dequeue</a> (<a class="el" href="structdaq__can__msg__t.html">daq_can_msg_t</a> *msg)</td></tr>
+<tr class="memitem:ga155876876ad156396ffbf3527f1fb974" id="r_ga155876876ad156396ffbf3527f1fb974"><td class="memItemLeft" align="right" valign="top">BaseType_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga155876876ad156396ffbf3527f1fb974">DAQ_CAN_Tx_Msg_Dequeue</a> (<a class="el" href="structdaq__can__msg__t.html">daq_can_msg_t</a> *msg)</td></tr>
 <tr class="memdesc:ga155876876ad156396ffbf3527f1fb974"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dequeues a CAN message of type <span class="tt"><a class="el" href="structdaq__can__msg__t.html" title="Message Info to be enqueued in the CAN queue.">daq_can_msg_t</a></span> from the FreeRTOS CAN queue.  <br /></td></tr>
-<tr class="memitem:ga2e1bd65d6cd92bc4116814beca1ab1ff" id="r_ga2e1bd65d6cd92bc4116814beca1ab1ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga2e1bd65d6cd92bc4116814beca1ab1ff">DAQ_CAN_Task</a> (void *pvParameters)</td></tr>
+<tr class="memitem:ga2e1bd65d6cd92bc4116814beca1ab1ff" id="r_ga2e1bd65d6cd92bc4116814beca1ab1ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga2e1bd65d6cd92bc4116814beca1ab1ff">DAQ_CAN_Tx_Task</a> (void *pvParameters)</td></tr>
 <tr class="memdesc:ga2e1bd65d6cd92bc4116814beca1ab1ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">A FreeRTOS task that dequeues the CAN message and transmits it.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
@@ -169,7 +169,7 @@ Transmission flow</h2>
 </ul>
 </li>
 </ol>
-<p>The <span class="tt"><a class="el" href="#ga2e1bd65d6cd92bc4116814beca1ab1ff" title="A FreeRTOS task that dequeues the CAN message and transmits it.">DAQ_CAN_Task()</a></span> then gets unblocked when a message is added to the queue, and it transmits the message.</p>
+<p>The <span class="tt"><a class="el" href="#ga2e1bd65d6cd92bc4116814beca1ab1ff" title="A FreeRTOS task that dequeues the CAN message and transmits it.">DAQ_CAN_Tx_Task()</a></span> then gets unblocked when a message is added to the queue, and it transmits the message.</p>
 <p>Generally speaking, instead of periodically transmitting all sensor data at fixed intervals, the system:</p><ol type="1">
 <li>Tracks both current and previous values for each sensor channel</li>
 <li>Checks if new readings differ significantly from previous values</li>
@@ -287,13 +287,13 @@ Encoded &amp; Decoding Algorithm</h2>
 </div>
 </div>
 <a id="ga155876876ad156396ffbf3527f1fb974" name="ga155876876ad156396ffbf3527f1fb974"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga155876876ad156396ffbf3527f1fb974">&#9670;&#160;</a></span>DAQ_CAN_Msg_Dequeue()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ga155876876ad156396ffbf3527f1fb974">&#9670;&#160;</a></span>DAQ_CAN_Tx_Msg_Dequeue()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">BaseType_t DAQ_CAN_Msg_Dequeue </td>
+          <td class="memname">BaseType_t DAQ_CAN_Tx_Msg_Dequeue </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structdaq__can__msg__t.html">daq_can_msg_t</a> *</td>          <td class="paramname"><span class="paramname"><em>msg</em></span></td><td>)</td>
           <td></td>
@@ -310,18 +310,18 @@ Encoded &amp; Decoding Algorithm</h2>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><span class="tt">pdTRUE</span> if successfully executed </dd></dl>
 <dl class="section attention"><dt>Attention</dt><dd>This function should only be used in CAN task. If the queue is empty, it will block the task until the queue is not empty.</dd></dl>
-<p>After dequeuing inside the <span class="tt">DAQ_CAN_Task</span>, the message is transmitted on the CAN bus. </p>
+<p>After dequeuing inside the <span class="tt">DAQ_CAN_Tx_Task</span>, the message is transmitted on the CAN bus. </p>
 
 </div>
 </div>
 <a id="ga4b100c228a2381176b7b0e53a63a1109" name="ga4b100c228a2381176b7b0e53a63a1109"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga4b100c228a2381176b7b0e53a63a1109">&#9670;&#160;</a></span>DAQ_CAN_Msg_Enqueue()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ga4b100c228a2381176b7b0e53a63a1109">&#9670;&#160;</a></span>DAQ_CAN_Tx_Msg_Enqueue()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void DAQ_CAN_Msg_Enqueue </td>
+          <td class="memname">void DAQ_CAN_Tx_Msg_Enqueue </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structdaq__can__msg__t.html">daq_can_msg_t</a> *</td>          <td class="paramname"><span class="paramname"><em>msg</em></span></td><td>)</td>
           <td></td>
@@ -336,18 +336,18 @@ Encoded &amp; Decoding Algorithm</h2>
   </table>
   </dd>
 </dl>
-<p>After enqueuing, the message then dequeued by the <span class="tt">DAQ_CAN_Msg_Dequeue</span> inside the <span class="tt">DAQ_CAN_Task</span> for transmitting on the CAN bus. </p>
+<p>After enqueuing, the message then dequeued by the <span class="tt">DAQ_CAN_Tx_Msg_Dequeue</span> inside the <span class="tt">DAQ_CAN_Tx_Task</span> for transmitting on the CAN bus. </p>
 
 </div>
 </div>
 <a id="ga2e1bd65d6cd92bc4116814beca1ab1ff" name="ga2e1bd65d6cd92bc4116814beca1ab1ff"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga2e1bd65d6cd92bc4116814beca1ab1ff">&#9670;&#160;</a></span>DAQ_CAN_Task()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ga2e1bd65d6cd92bc4116814beca1ab1ff">&#9670;&#160;</a></span>DAQ_CAN_Tx_Task()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void DAQ_CAN_Task </td>
+          <td class="memname">void DAQ_CAN_Tx_Task </td>
           <td>(</td>
           <td class="paramtype">void *</td>          <td class="paramname"><span class="paramname"><em>pvParameters</em></span></td><td>)</td>
           <td></td>
